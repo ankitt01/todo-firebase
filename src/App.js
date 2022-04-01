@@ -2,6 +2,7 @@ import './App.css';
 import { useEffect, useState } from 'react';
 import {db} from "./firebase_config"
 import { collection, addDoc, serverTimestamp, getDocs } from "firebase/firestore"; 
+import Todo from './Todo';
 
 
 function App() {
@@ -10,25 +11,23 @@ function App() {
 
   useEffect(() => { 
    getTodos(); 
-  }, [])
+  }, [todos])
 
   const getTodos = async() => {
     const querySnapshot = await getDocs(collection(db, "todos"));
-    setTodos(
-      querySnapshot.forEach((doc) => ({
-        id: doc.id,
-        todo: doc.data().todo,
-        progress: doc.data().progress,
-      }))
-    )
     
+    let todosArray = []
+      querySnapshot.forEach((doc) => {
+        todosArray.push({...doc.data(), id:doc.id})
+      })
+      setTodos(todosArray);
   }
   const addTodo = async (e) => {
     e.preventDefault();
     console.log(todoInput);
 
     try {
-      const docRef = await addDoc(collection(db, "todos"), {
+      await addDoc(collection(db, "todos"), {
         todo: todoInput,
         progress: true,
         timestamp: serverTimestamp(),
@@ -46,12 +45,15 @@ function App() {
           ANKIT'S Todo App
         </h1>
 
-        <form>
+        <form className='mb-4'>
           <label htmlFor="input" className
           text-xs>Write a Todo</label> <br /> 
           <input onChange={(e) => setTodoInput(e.target.value)} value={todoInput} type="text" id="input" className='border outline-none w-[300px] py-2 px-4 mr-2 mt-2 rounded-lg'/>
           <button type='submit' onClick={(e) => addTodo(e)} className='bg-gray-500 text-white py-2 px-4 rounded-lg'>Add Todo</button>
         </form>
+          {todos?.map((todo) => (
+              <Todo todo={todo.todo} progress={todo.progress} id={todo.id} />
+          ))}
       </div>
     </div>
   );
